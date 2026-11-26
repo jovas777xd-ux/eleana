@@ -53,7 +53,7 @@ function valorPrecio(id) {
 
 function datosFormulario(prefijo) {
   const editando = prefijo === "editar";
-  const n = (id) => campo(editando ? "editar" + id : id + "Producto");
+  const n = (id) => campo(editando ? "editar" + id : id.charAt(0).toLowerCase() + id.slice(1) + "Producto");
   const nombre = n("Nombre").value.trim();
   const categoria = n("Categoria").value.trim();
   if (!nombre || !categoria) throw new Error("Completa el nombre y la categoría.");
