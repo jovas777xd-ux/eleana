@@ -14,6 +14,34 @@ const mensajes = {
   recuperacion: campo("mensajeRecuperacion")
 };
 let inventario = [];
+let imagenesOriginales = new Map();
+let cargaImagenesOriginales = null;
+
+// Las fotos originales están integradas en el HTML del catálogo (17 MB).
+// Se recuperan una sola vez desde la página pública y se relacionan por código.
+// No se copian imágenes base64 a Supabase y no se toca el catálogo original.
+function cargarImagenesOriginales() {
+  if (cargaImagenesOriginales) return cargaImagenesOriginales;
+  cargaImagenesOriginales = (async () => {
+    const respuesta = await fetch("../index.html", { cache: "force-cache" });
+    if (!respuesta.ok) throw new Error("No se pudo consultar el catálogo original");
+    const html = await respuesta.text();
+    const prefijo = "const products=";
+    const inicio = html.indexOf(prefijo);
+    const fin = html.indexOf("];", inicio);
+    if (inicio < 0 || fin < 0) throw new Error("No se encontró el inventario original");
+    const productosOriginales = JSON.parse(html.slice(inicio + prefijo.length, fin + 2));
+    imagenesOriginales = new Map(productosOriginales
+      .filter(p => p.id && p.image)
+      .map(p => [p.id, p.image]));
+    dibujarProductos();
+  })().catch(error => {
+    console.warn("ELEANA: no fue posible mostrar las fotografías originales", error);
+  });
+  return cargaImagenesOriginales;
+}
+
+
 let administradoraAutorizada = false;
 let comprobandoAcceso = false;
 let recuperando = new URLSearchParams(location.hash.replace(/^#/, "")).get("type") === "recovery"
@@ -283,6 +311,8 @@ async function cargarProductos() {
     informar("productos", "");
     actualizarCategorias();
     dibujarProductos();
+    // Mostrar las fotos incrustadas de los 225 productos al terminar la carga.
+    cargarImagenesOriginales();
   } catch (error) {
     informar("productos", "Error al cargar productos: " + error.message);
   }
@@ -338,9 +368,12 @@ function dibujarProductos() {
     fila.className = "product-row";
     const miniatura = document.createElement("div");
     miniatura.className = "product-thumb";
-    if (esURLFotoSegura(producto.imagen)) {
+    const foto = esURLFotoSegura(producto.imagen)
+      ? producto.imagen
+      : imagenesOriginales.get(producto.codigo);
+    if (esURLFotoSegura(foto)) {
       const img = document.createElement("img");
-      img.src = producto.imagen;
+      img.src = foto;
       img.alt = "";
       img.loading = "lazy";
       miniatura.append(img);
