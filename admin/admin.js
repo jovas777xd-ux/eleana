@@ -51,6 +51,29 @@ function valorPrecio(id) {
   return numero;
 }
 
+// Convierte conflictos de codigo en instrucciones claras para la administradora.
+function mensajeErrorGuardado(error) {
+  if (error && (error.code === "23505" || String(error.message || "").includes("eleana_productos_codigo_key"))) {
+    return "Este código ya está registrado en ELEANA. Busca el producto existente para editarlo o escribe otro código.";
+  }
+  return error?.message || String(error || "Error desconocido");
+}
+
+function codigoNuevo() {
+  // El codigo se asigna automáticamente si el campo está vacío.
+  return "EL-" + crypto.randomUUID().replace(/-/g, "").slice(0, 12).toUpperCase();
+}
+
+function codigoRepetido(codigo, idExcluido = null) {
+  if (!codigo) return false;
+  const buscado = codigo.toLocaleUpperCase("es");
+  return inventario.some(p =>
+    p.codigo &&
+    p.codigo.toLocaleUpperCase("es") === buscado &&
+    (idExcluido === null || Number(p.id) !== Number(idExcluido))
+  );
+}
+
 function datosFormulario(prefijo) {
   const editando = prefijo === "editar";
   const n = (id) => campo(editando ? "editar" + id : id.charAt(0).toLowerCase() + id.slice(1) + "Producto");
@@ -386,10 +409,16 @@ campo("formProducto").addEventListener("submit", async (evento) => {
   let subida = null;
   try {
     const datos = datosFormulario("");
+    // Si no escribió código, creamos uno único. Si lo escribió, respetarlo.
+    datos.codigo = datos.codigo || codigoNuevo();
+    // Detectar repetidos antes de subir una fotografía.
+    if (codigoRepetido(datos.codigo)) {
+      throw new Error("Este código ya está registrado en ELEANA. Busca el producto existente para editarlo o escribe otro código.");
+    }
     subida = await subirFoto(campo("imagenProducto").files[0]);
     const nuevo = { ...datos, activo: false, imagen: subida?.url || null };
     const { error } = await cliente.from(TABLA_PRODUCTOS).insert(nuevo);
-    if (error) throw error;
+    if (error) throw new Error(mensajeErrorGuardado(error));
     // La consulta terminó: ya no debemos eliminar la foto si falla la actualización de la lista.
     subida = null;
     // El evento no conserva currentTarget después de un await; usar el formulario por ID.
@@ -417,10 +446,13 @@ campo("formEditar").addEventListener("submit", async (evento) => {
       throw new Error("Producto no encontrado. Actualiza la lista.");
     }
     const datos = datosFormulario("editar");
+    if (codigoRepetido(datos.codigo, id)) {
+      throw new Error("Este código ya está registrado en otro producto de ELEANA. Escribe uno diferente.");
+    }
     subida = await subirFoto(campo("editarImagen").files[0]);
     if (subida) datos.imagen = subida.url;
     const { error } = await cliente.from(TABLA_PRODUCTOS).update(datos).eq("id", id);
-    if (error) throw error;
+    if (error) throw new Error(mensajeErrorGuardado(error));
     campo("editarImagen").value = "";
     informar("editar", "¡Cambios guardados correctamente!");
     await cargarProductos();
