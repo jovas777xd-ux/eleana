@@ -40,7 +40,7 @@
                 name: String(r.nombre || ""),
                 category: String(r.categoria || ""),
                 image: r.imagen || original?.image || "",
-                cutout: r.imagen ? "" : (r.recorte || original?.cutout || ""),
+                cutout: r.imagen ? "" : (original?.cutout || ""),
                 video: r.video || null
             };
         });
