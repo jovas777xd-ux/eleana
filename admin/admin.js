@@ -390,7 +390,10 @@ campo("formProducto").addEventListener("submit", async (evento) => {
     const nuevo = { ...datos, activo: false, imagen: subida?.url || null };
     const { error } = await cliente.from(TABLA_PRODUCTOS).insert(nuevo);
     if (error) throw error;
-    evento.currentTarget.reset();
+    // La consulta terminó: ya no debemos eliminar la foto si falla la actualización de la lista.
+    subida = null;
+    // El evento no conserva currentTarget después de un await; usar el formulario por ID.
+    campo("formProducto").reset();
     informar("guardar", "¡Producto guardado! Está oculto hasta que pulses Mostrar.");
     await cargarProductos();
   } catch (error) {
