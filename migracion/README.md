@@ -21,15 +21,12 @@
 7. Probar catálogo completo, fotografías, búsqueda, carrito y WhatsApp. Probar CRUD del panel con producto de prueba y una cuenta no administradora.
 8. Solo después de todas las comprobaciones, fusionar cambios a `main`.
 
-## Particularidad técnica de las fotografías
-El HTML incorpora ~16,7 MB de fotografías en data URIs. Para evitar duplicarlas, la base Supabase conserva solamente los metadatos; la aplicación enlaza los códigos originales con sus imágenes embebidas. Las fotos nuevas se suben al bucket `productos`.
+## Particularidad técnica de las fotografías — RESUELTA
+Las 225 imágenes originales se extrajeron cuidadosamente a `imagenes/<codigo>.<jpg/webp>`. La nueva versión del `index.html` en esta rama quedó en aproximadamente **564 KB** en vez de ~17 MB, conservando las imágenes y el diseño. **La rama `main` no fue modificada** y conserva el archivo original hasta la publicación.
 
-El panel de administración preparado puede leer las fotografías originales mediante el HTML público (es una operación adicional de ~17 MB y conviene optimizarla en el futuro).
+La base Supabase almacena solo metadatos; para registros originales el catálogo usa las imágenes estáticas por código. Las imágenes nuevas se almacenarán en Supabase Storage y el panel admite ambos tipos. `catalogo-supabase.js` ya está enlazado desde la página preparada en esta rama.
 
-### Bloqueo antes del despliegue
-GitHub no aceptó la actualización directa del `index.html` de 17 MB con la herramienta de edición. El archivo original **no se modificó**, ni siquiera en esta rama. `catalogo-supabase.js` ya está preparado pero todavía no se carga desde `index.html`.
-
-Para terminar la integración puede ser necesario dividir las fotos en archivos estáticos individuales y reducir el HTML, o actualizar ese archivo grande por otra vía con capacidad de transferencia suficiente. No publicar el panel como terminado hasta resolver esto.
+**Importante:** aunque el código está conectado y pasa verificaciones estáticas, **NO fusionar esta rama todavía**. Primero crear y verificar el proyecto Supabase exclusivo de ELEANA, importar los 225 productos, configurar cuenta de administración y probar en un navegador. La versión pública en `main` permanece intacta mientras tanto.
 
 ## Seguridad
 Los productos visibles son los únicos que debe devolver la API pública. Las operaciones de escritura requieren RLS y la cuenta autorizada. El panel está preparado para no conservar la sesión al recargar, como el panel de ALEXVAL.
