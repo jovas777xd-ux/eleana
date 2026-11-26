@@ -316,7 +316,18 @@ for (const image of document.querySelectorAll('img[data-image-source]')) {
 </script><script>
 window.ELEANA_CONFIG = { whatsapp: '525550592814' };
 
-const $=s=>document.querySelector(s);const products=[
+const $=s=>document.querySelector(s);function escapeHTMLEleana(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  })[character]);
+}
+function videoSeguroEleana(value) {
+  try {
+    const url = new URL(String(value ?? ""));
+    return url.protocol === "https:" ? url.href : "";
+  } catch { return ""; }
+}
+const products=[
   {
     "id": "eleana-abanikito",
     "name": "Abanikito",
@@ -1797,18 +1808,7 @@ const $=s=>document.querySelector(s);const products=[
     "image": "imagenes/eleana-tubo-de-humo-rosa.jpg",
     "cutout": "--cut-width:min(380.488cqw,82.192cqh);--cut-translate:-52.042% -44.313%;--cut-polygon:polygon(58.083% 3.688%,58.917% 3.250%,59.583% 3.688%,59.500% 4.625%,58.083% 7.563%,55.917% 13.500%,57.917% 14.313%,59.083% 15.750%,59.667% 17.625%,60.250% 34.063%,60.917% 45.438%,62.083% 54.188%,62.583% 69.688%,63.750% 82.125%,64.000% 84.375%,62.667% 84.750%,59.167% 85.188%,54.417% 85.375%,48.250% 85.375%,43.000% 85.063%,40.833% 84.688%,40.083% 83.938%,40.500% 73.750%,41.417% 49.625%,42.083% 19.500%,42.333% 16.313%,43.333% 14.875%,45.167% 13.688%,48.083% 13.000%,50.917% 12.563%,53.333% 12.750%,55.167% 7.625%,56.083% 7.125%)"
   }
-]
-function escapeHTMLEleana(value) {
-  return String(value ?? "").replace(/[&<>"']/g, character => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-  })[character]);
-}
-function videoSeguroEleana(value) {
-  try {
-    const url = new URL(String(value ?? ""));
-    return url.protocol === "https:" ? url.href : "";
-  } catch { return ""; }
-}
+];
 const productNumbers = new Map(products.map((product, index) => [product.id, index + 1]));
 let cart={};try{const saved=JSON.parse(localStorage.getItem('eleana-cart')||'{}');for(const p of products)if(Number.isInteger(saved[p.id])&&saved[p.id]>0&&saved[p.id]<=99)cart[p.id]=saved[p.id]}catch{}let filter='Todos';function render(){const q=$('#search').value.toLocaleLowerCase('es');const list=products.filter(p=>(filter==='Todos'||p.category===filter)&&p.name.toLocaleLowerCase('es').includes(q));$('#products').innerHTML=list.map(p=>`<article class="product"><div class="product-art" ${p.cutout ? `data-cutout style="${p.cutout}"` : ""}><img src="${p.image}" alt="" loading="lazy" decoding="async"></div><div class="product-body"><span>${escapeHTMLEleana(p.category.toUpperCase())}</span><h3>${productNumbers.get(p.id)}. ${escapeHTMLEleana(p.name)}</h3>${videoSeguroEleana(p.video) ? '<a class="product-video" href="' + escapeHTMLEleana(videoSeguroEleana(p.video)) + '" target="_blank" rel="noopener noreferrer">Ver video ↗</a>' : ''}<div class="product-bottom"><span>Precio a cotizar</span><button class="add" data-add="${p.id}">Agregar ＋</button></div></div></article>`).join('')||'<p>No encontramos coincidencias. Prueba con otro nombre.</p>'}function update(){const n=Object.values(cart).reduce((a,b)=>a+b,0);$('#count').textContent=n;try{localStorage.setItem('eleana-cart',JSON.stringify(cart))}catch{}$('#cart-items').innerHTML=products.filter(p=>cart[p.id]).map(p=>`<div class="cart-row"><p>${escapeHTMLEleana(p.name)}<small>Precio a cotizar</small></p><div class="qty"><button data-id="${p.id}" data-step="-1" aria-label="Quitar una unidad de ${escapeHTMLEleana(p.name)}">−</button><span>${cart[p.id]}</span><button data-id="${p.id}" data-step="1" aria-label="Agregar una unidad de ${escapeHTMLEleana(p.name)}">＋</button></div></div>`).join('')||'<p>Tu selección está vacía. Explora el catálogo y agrega tus favoritos.</p>';$('#cart-summary').textContent=n?`${n} artículo${n===1?'':'s'} · Total sujeto a cotización`:'';$('#checkout').disabled=!n;$('#checkout').style.opacity=n?'1':'.4'}let toastTimer;function toast(t){$('#toast').textContent=t;$('#toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),2300)}function whatsapp(message){const phone=String(window.ELEANA_CONFIG.whatsapp||'').replace(/\D/g,'');if(!phone){$('#pending').value=message;$('#setup').showModal();return}window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(message),'_blank','noopener,noreferrer')}document.addEventListener('click',e=>{const add=e.target.closest('[data-add]');if(add){const id=add.dataset.add;cart[id]=Math.min(99,(cart[id]||0)+1);update();toast('Agregado a tu selección')}const qty=e.target.closest('[data-step]');if(qty){const id=qty.dataset.id;cart[id]=Math.min(99,(cart[id]||0)+Number(qty.dataset.step));if(cart[id]<=0)delete cart[id];update()}});document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b))});render()});$('#search').oninput=render;$('.cart-open').onclick=()=>$('#cart').showModal();$('#close-cart').onclick=()=>$('#cart').close();$('#close-setup').onclick=()=>$('#setup').close();$('#copy').onclick=async()=>{try{await navigator.clipboard.writeText($('#pending').value);$('#copy-status').textContent='Mensaje copiado.'}catch{$('#pending').select();$('#copy-status').textContent='Selecciona y copia el mensaje.'}};$('#checkout').onclick=()=>{if(!Object.keys(cart).length)return;const name=$('#customer').value.trim();whatsapp(`Hola, Pirotecnia Eleana.${name?' Soy '+name+'.':''} Me gustaría cotizar esta selección del catálogo:\n\n`+products.filter(p=>cart[p.id]).map(p=>`${cart[p.id]} × ${p.name}`).join('\n')+'\n\n¿Me confirman precios y disponibilidad?')};$('#quote').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);whatsapp(`Hola, Pirotecnia Eleana. Quiero cotizar un evento.\n\nNombre: ${f.get('nombre')}\nEvento: ${f.get('evento')}\nFecha: ${f.get('fecha')}\nLugar: ${f.get('lugar')}\nDetalles: ${f.get('idea')||'Por definir'}\n\n¿Podrían ayudarme con una propuesta?`)};$('.whatsapp').onclick=()=>whatsapp('Hola, Pirotecnia Eleana. Me gustaría recibir información sobre su catálogo y eventos.');$('#year').textContent=new Date().getFullYear();const today=new Date();today.setMinutes(today.getMinutes()-today.getTimezoneOffset());document.querySelector('[name=fecha]').min=today.toISOString().slice(0,10);render();update();
 const canvas=$('#fireworks'),ctx=canvas.getContext('2d'),reduce=matchMedia('(prefers-reduced-motion: reduce)');
