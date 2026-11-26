@@ -60,8 +60,32 @@ function mensajeErrorGuardado(error) {
 }
 
 function codigoNuevo() {
-  // El codigo se asigna automáticamente si el campo está vacío.
-  return "EL-" + crypto.randomUUID().replace(/-/g, "").slice(0, 12).toUpperCase();
+  // UUID aleatorio: no depende del último código ni de otros negocios.
+  return "EL-" + crypto.randomUUID().replace(/-/g, "").slice(0, 16).toUpperCase();
+}
+
+// Si hay colisión, PostgreSQL no inserta el producto. Es seguro reintentar
+// usando otro código nuevo, sin volver a subir la misma fotografía.
+function esConflictoCodigo(error) {
+  return error?.code === "23505" && (
+    String(error?.message || "").includes("eleana_productos_codigo_key") ||
+    String(error?.details || "").includes("(codigo)=") ||
+    String(error?.message || "").includes("Key (codigo)")
+  );
+}
+
+async function insertarConCodigoUnico(nuevo) {
+  const datos = { ...nuevo };
+  for (let intento = 0; intento < 4; intento++) {
+    const { error } = await cliente.from(TABLA_PRODUCTOS).insert(datos);
+    if (!error) return datos.codigo;
+    if (!esConflictoCodigo(error)) {
+      throw new Error(mensajeErrorGuardado(error));
+    }
+    // Un código proporcionado manualmente también se sustituye si ya existe.
+    datos.codigo = codigoNuevo();
+  }
+  throw new Error("No fue posible asignar un código único. Intenta nuevamente.");
 }
 
 function codigoRepetido(codigo, idExcluido = null) {
@@ -409,21 +433,28 @@ campo("formProducto").addEventListener("submit", async (evento) => {
   let subida = null;
   try {
     const datos = datosFormulario("");
-    // Si no escribió código, creamos uno único. Si lo escribió, respetarlo.
-    datos.codigo = datos.codigo || codigoNuevo();
-    // Detectar repetidos antes de subir una fotografía.
-    if (codigoRepetido(datos.codigo)) {
-      throw new Error("Este código ya está registrado en ELEANA. Busca el producto existente para editarlo o escribe otro código.");
+    // Previene crear dos veces el mismo producto por los errores de versiones anteriores.
+    const existente = inventario.find(p =>
+      buscarTexto(p.nombre) === buscarTexto(datos.nombre) &&
+      buscarTexto(p.categoria) === buscarTexto(datos.categoria) &&
+      (p.precio === null ? null : Number(p.precio)) === datos.precio
+    );
+    if (existente) {
+      throw new Error("Este producto ya aparece en el inventario (ID " + existente.id + "). Búscalo y usa Editar en lugar de guardarlo otra vez.");
     }
+
+    // Si no escribió código, creamos uno. Si ya está ocupado, creamos otro.
+    const codigoSolicitado = datos.codigo;
+    datos.codigo = (codigoSolicitado && !codigoRepetido(codigoSolicitado))
+      ? codigoSolicitado : codigoNuevo();
     subida = await subirFoto(campo("imagenProducto").files[0]);
     const nuevo = { ...datos, activo: false, imagen: subida?.url || null };
-    const { error } = await cliente.from(TABLA_PRODUCTOS).insert(nuevo);
-    if (error) throw new Error(mensajeErrorGuardado(error));
+    const codigoGuardado = await insertarConCodigoUnico(nuevo);
     // La consulta terminó: ya no debemos eliminar la foto si falla la actualización de la lista.
     subida = null;
     // El evento no conserva currentTarget después de un await; usar el formulario por ID.
     campo("formProducto").reset();
-    informar("guardar", "¡Producto guardado! Está oculto hasta que pulses Mostrar.");
+    informar("guardar", "¡Producto guardado con código " + codigoGuardado + "! Está oculto hasta que pulses Mostrar.");
     await cargarProductos();
   } catch (error) {
     if (subida?.ruta) await limpiarFoto(subida.ruta);
