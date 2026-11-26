@@ -30,7 +30,8 @@ function cargarImagenesOriginales() {
     const inicio = html.indexOf(prefijo);
     const fin = html.indexOf("];", inicio);
     if (inicio < 0 || fin < 0) throw new Error("No se encontró el inventario original");
-    const productosOriginales = JSON.parse(html.slice(inicio + prefijo.length, fin + 2));
+    // fin apunta a "];": el JSON termina en "]", sin incluir el punto y coma.
+    const productosOriginales = JSON.parse(html.slice(inicio + prefijo.length, fin + 1));
     imagenesOriginales = new Map(productosOriginales
       .filter(p => p.id && p.image)
       .map(p => [p.id, p.image]));
