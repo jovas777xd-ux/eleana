@@ -8,7 +8,7 @@
 - Productos originales: **225** con códigos únicos.
 - Categorías: **61 «Baterías» y 164 «Productos»**.
 - Todos aparecen **«Precio a cotizar»**, no hay precios numéricos.
-- Las **225 fotos están incrustadas como data:image;base64** dentro del HTML, no en archivos sueltos.
+- Originalmente las **225 fotos estaban incrustadas como data:image;base64**; en esta rama ya se extrajeron a la carpeta `imagenes/`.
 - Se conservará el diseño existente y las cotizaciones por WhatsApp.
 
 ## Orden de configuración
@@ -17,8 +17,8 @@
 3. Ejecutar `migracion/02_importar_225_productos.sql`. Verificar **225 total, 225 visibles, 61 Baterías y 164 Productos**.
 4. Crear administradora en Supabase Authentication > Users y asignar su UID a `public.administradores` mediante SQL Editor. No guardar contraseñas en GitHub.
 5. En esta rama, configurar `admin/config.js` con la Project URL sin `/rest/v1/` y la clave **publishable** (datos públicos; nunca sb_secret o service_role).
-6. Integrar `catalogo-supabase.js` en `index.html` antes de publicar.
-7. Probar catálogo completo, fotografías, búsqueda, carrito y WhatsApp. Probar CRUD del panel con producto de prueba y una cuenta no administradora.
+6. Confirmar que `catalogo-supabase.js` está enlazado en el `index.html` preparado (ya está implementado en esta rama).
+7. Antes de publicar, probar en una vista de pruebas de la rama (por ejemplo GitHub Pages de pruebas) el catálogo completo, fotografías, búsqueda, carrito y WhatsApp. Probar CRUD del panel con producto de prueba y una cuenta no administradora.
 8. Solo después de todas las comprobaciones, fusionar cambios a `main`.
 
 ## Particularidad técnica de las fotografías — RESUELTA
