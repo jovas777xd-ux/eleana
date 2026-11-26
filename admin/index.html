@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#190029">
+  <title>Administración | Pirotecnia Eleana</title>
+  <style>
+    :root{color-scheme:dark;--bg:#13001d;--panel:#1d1325;--card:#291a34;--edge:#54455e;--text:#f8f5ff;--muted:#c4b9cf;--lime:#d6ff43}
+    *{box-sizing:border-box}body{min-height:100vh;margin:0;padding:20px;color:var(--text);font-family:"Segoe UI",Arial,sans-serif;background:linear-gradient(160deg,#300052,#190029 40%,#08080d)}
+    button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}
+    button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--lime);outline-offset:3px}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .access{width:min(420px,100%);margin:clamp(35px,11vh,100px) auto;text-align:center;padding:34px 24px}
+    .access-brand{color:var(--lime);font-size:12px;font-weight:900;letter-spacing:.2em;text-transform:uppercase}
+    .access h1{font-size:clamp(30px,7vw,42px);margin:8px 0 12px;letter-spacing:.03em}
+    .access p{color:var(--muted)}
+    .access-field{position:relative;margin-top:19px}
+    .access-field input{width:100%;border:1px solid #80618a;background:#45374f;border-radius:999px;padding:17px 20px 17px 63px;color:#fff;min-height:62px}
+    .access-field input::placeholder{color:#eee5f3}
+    .access-icon{position:absolute;left:0;top:0;display:flex;align-items:center;justify-content:center;border-radius:50%;width:62px;height:62px;background:#fff;color:#271530;font-size:24px}
+    .access button{width:100%;border:0;border-radius:999px;padding:16px 20px;margin-top:25px;background:var(--lime);color:#1b1025;font-weight:900}
+    #mensaje,#mensajeRecuperacion{min-height:20px;color:#ffd5dc;font-size:14px;margin-top:17px}
+    #panel{display:none;max-width:1140px;padding:clamp(15px,3vw,30px);margin:10px auto;border-radius:22px;border:1px solid var(--edge);background:var(--panel)}
+    #recuperacion{display:none}#seccionEditar{display:none;scroll-margin-top:20px}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--edge);padding-bottom:18px}
+    .header h1{font-size:clamp(22px,3vw,30px);margin:0}.header p{color:var(--muted);margin:5px 0 0;font-size:13px}
+    .eyebrow{color:var(--lime)!important;letter-spacing:.14em;text-transform:uppercase;font-size:11px!important;font-weight:900}
+    .section{padding:22px;margin-top:19px;background:var(--card);border:1px solid var(--edge);border-radius:18px}
+    .section h2{font-size:21px;margin:0 0 8px}.help{color:var(--muted);font-size:13px;margin:0 0 18px}
+    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+    label{display:block;margin-bottom:8px;font-size:13px;font-weight:700}
+    .field input,.field select,#buscarProductoAdmin{width:100%;min-width:0;padding:12px 14px;color:#fff;background:#1b1024;border:1px solid #6d597b;border-radius:13px}
+    .field input[type=file]{max-width:100%;cursor:pointer}
+    .field input::placeholder,#buscarProductoAdmin::placeholder{color:#b5a2be}
+    .field--wide{grid-column:1/-1}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:17px}
+    .btn,.producto-acciones button{border-radius:999px;border:1px solid #7d6e88;padding:11px 17px;color:#f8f4ff;background:#463151;font-size:13px;font-weight:800}
+    .btn-primary,.producto-acciones button:first-child{border-color:var(--lime);background:var(--lime);color:#1b1025}
+    .btn-red,.producto-acciones button.accion-eliminar{background:#a8304b;color:#fff;border-color:#a8304b}
+    .msg{color:var(--lime);font-size:13px;min-height:20px;margin:13px 0 0}
+    #buscarProductoAdmin{max-width:540px;border-radius:999px;margin:8px 0}
+    #contadorBusqueda,#mensajeProductos{font-size:13px;color:var(--muted)}
+    #listaProductos{display:grid;gap:12px;margin-top:18px}
+    .producto-fila{display:grid;grid-template-columns:76px minmax(0,1fr) auto;align-items:center;gap:15px;padding:12px;background:#1c1225;border:1px solid #523e60;border-radius:15px}
+    .producto-fila[hidden]{display:none!important}
+    .producto-imagen-caja{display:flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:11px;overflow:hidden;background:#382444;color:#e4d8e9;font-size:11px;text-align:center}
+    .producto-imagen{width:100%;height:100%;object-fit:contain}
+    .producto-detalles{min-width:0}.producto-nombre{display:block;overflow-wrap:anywhere}
+    .producto-meta{color:var(--muted);font-size:12px;margin:4px 0}.producto-precio{color:var(--lime);font-weight:800;font-size:13px}
+    .producto-estado{display:inline-block;margin-top:5px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800}
+    .producto-estado.visible{background:#245a36;color:#b9ffce}.producto-estado.oculto{background:#644324;color:#ffe1ac}
+    .producto-acciones{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px;max-width:350px}
+    .producto-acciones button{padding:8px 13px;font-size:12px}
+    .list-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    @media(max-width:760px){.producto-fila{grid-template-columns:70px minmax(0,1fr)}.producto-imagen-caja{width:70px;height:70px}.producto-acciones{grid-column:1/-1;max-width:none;justify-content:flex-start}.producto-acciones button{flex:1 1 100px}}
+    @media(max-width:530px){body{padding:9px}.section{padding:16px}.form-grid{grid-template-columns:1fr}.field--wide{grid-column:auto}.header{align-items:flex-start}}
+  </style>
+</head>
+<body>
+  <main class="access" id="login">
+    <p class="access-brand">Pirotecnia Eleana</p><h1>USER LOGIN</h1>
+    <p>Acceso exclusivo para la administradora</p>
+    <form id="formLogin">
+      <div class="access-field"><label class="sr-only" for="correo">Correo electrónico</label><span class="access-icon" aria-hidden="true">♙</span><input id="correo" type="email" autocomplete="username" placeholder="Correo electrónico" required></div>
+      <div class="access-field"><label class="sr-only" for="contrasena">Contraseña</label><span class="access-icon" aria-hidden="true">♙</span><input id="contrasena" type="password" autocomplete="current-password" placeholder="Contraseña" required></div>
+      <button type="submit">LOGIN</button>
+    </form>
+    <p id="mensaje" role="status"></p>
+  </main>
+
+  <section class="access" id="recuperacion" style="display:none">
+    <p class="access-brand">Pirotecnia Eleana</p><h1>Restablecer contraseña</h1>
+    <form id="formRecuperacion">
+      <div class="access-field"><label for="nuevaContrasena">Nueva contraseña</label><input type="password" id="nuevaContrasena" autocomplete="new-password" minlength="8" required></div>
+      <button type="submit">Guardar contraseña</button>
+    </form><p id="mensajeRecuperacion" role="status"></p>
+  </section>
+
+  <main id="panel">
+    <header class="header">
+      <div><p class="eyebrow">Pirotecnia Eleana</p><h1>Panel de administración</h1><p>Gestión de productos y fotografías</p></div>
+      <button type="button" class="btn" id="salir">Cerrar sesión</button>
+    </header>
+    <section class="section">
+      <h2>Agregar producto</h2><p class="help">Los productos nuevos se guardan ocultos hasta que decidas publicarlos.</p>
+      <form id="formProducto">
+        <div class="form-grid">
+          <div class="field"><label for="nombreProducto">Nombre</label><input id="nombreProducto" type="text" required placeholder="Nombre del producto"></div>
+          <div class="field"><label for="categoriaProducto">Categoría</label><select id="categoriaProducto" required><option value="" disabled selected>Elegir categoría</option><option value="Baterías">Baterías</option><option value="Productos">Productos</option></select></div>
+          <div class="field"><label for="imagenProducto">Fotografía (JPG/PNG/WEBP, máximo 5 MB)</label><input type="file" id="imagenProducto" accept="image/jpeg,image/png,image/webp" required></div>
+          <div class="field"><label for="videoProducto">Enlace de video (opcional)</label><input id="videoProducto" type="url" placeholder="https://..."></div>
+        </div><div class="actions"><button class="btn btn-primary" type="submit">Guardar producto</button></div>
+      </form><p id="mensajeGuardar" class="msg" role="status"></p>
+    </section>
+
+    <section class="section" id="seccionEditar" style="display:none">
+      <h2>Editar producto</h2><p class="help">La fotografía nueva es opcional. Si no eliges otra, se conservará la original.</p>
+      <form id="formEditar">
+        <input type="hidden" id="editarId">
+        <div class="form-grid">
+          <div class="field"><label for="editarNombre">Nombre</label><input id="editarNombre" type="text" required></div>
+          <div class="field"><label for="editarCategoria">Categoría</label><select id="editarCategoria" required><option value="Baterías">Baterías</option><option value="Productos">Productos</option></select></div>
+          <div class="field"><label for="editarImagen">Cambiar fotografía (opcional)</label><input type="file" id="editarImagen" accept="image/jpeg,image/png,image/webp"></div>
+          <div class="field"><label for="editarVideo">Enlace de video (opcional)</label><input id="editarVideo" type="url" placeholder="https://..."></div>
+        </div><div class="actions"><button class="btn btn-primary" type="submit">Guardar cambios</button><button class="btn" type="button" id="cancelarEdicion">Cancelar</button></div>
+      </form><p id="mensajeEditar" class="msg" role="status"></p>
+    </section>
+
+    <section class="section">
+      <div class="list-head"><h2>Productos registrados</h2><button id="actualizarProductos" class="btn" type="button">Actualizar lista</button></div>
+      <label for="buscarProductoAdmin">Buscar por nombre, categoría o código</label>
+      <input id="buscarProductoAdmin" type="search" placeholder="Ej. Abanikito, Baterías" autocomplete="off" aria-describedby="contadorBusqueda">
+      <p id="mensajeProductos"></p><p id="contadorBusqueda" aria-live="polite"></p>
+      <div id="listaProductos"></div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js?v=1"></script>
+  <script src="admin.js?v=1"></script>
+</body>
+</html>
