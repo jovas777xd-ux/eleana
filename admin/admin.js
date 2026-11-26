@@ -34,8 +34,8 @@ async function obtenerFotosOriginales() {
         if (coincidencia) {
             const originales = JSON.parse(coincidencia[1]);
             for (const p of originales) {
-                if (p.id && /^data:image\/(jpeg|png|webp);base64,/.test(p.image || "")) {
-                    mapa.set(p.id, p.image);
+                if (p.id && /^imagenes\/[a-z0-9_-]+\.(jpg|jpeg|png|webp)$/.test(p.image || "")) {
+                    mapa.set(p.id, "../" + p.image);
                 }
             }
         }
